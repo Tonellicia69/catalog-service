@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: catalog-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ecommerce_catalog
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  # For development - H2 in-memory database
+  # Uncomment if you want to use H2 for testing
+  # datasource:
+  #   url: jdbc:h2:mem:catalogdb
+  #   driver-class-name: org.h2.Driver
+  # jpa:
+  #   hibernate:
+  #     ddl-auto: create-drop
+  #   database-platform: org.hibernate.dialect.H2Dialect
+
+server:
+  port: 8082
+
+# Inventory Service Configuration
+inventory:
+  service:
+    url: ${INVENTORY_SERVICE_URL:http://localhost:8081}
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.ecommerce.catalog: INFO
+    org.springframework.web: INFO
+    org.hibernate: WARN
+
