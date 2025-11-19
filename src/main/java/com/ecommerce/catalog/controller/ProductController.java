@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/products")
@@ -28,9 +29,11 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "ASC") Sort.Direction direction) {
+            @RequestParam(defaultValue = "ASC") String direction) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Objects.requireNonNull(direction, "direction must not be null");
+        Sort.Direction dir = Sort.Direction.fromString(direction);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, sortBy));
         Page<ProductDTO> products = productService.getAllProducts(pageable);
         return ResponseEntity.ok(products);
     }
@@ -58,9 +61,11 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "ASC") Sort.Direction direction) {
+            @RequestParam(defaultValue = "ASC") String direction) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Objects.requireNonNull(direction, "direction must not be null");
+        Sort.Direction dir = Sort.Direction.fromString(direction);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, sortBy));
         Page<ProductDTO> products = productService.searchProducts(
                 name, categoryId, minPrice, maxPrice, isActive, isVisible, pageable);
         return ResponseEntity.ok(products);
@@ -72,9 +77,11 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "ASC") Sort.Direction direction) {
+            @RequestParam(defaultValue = "ASC") String direction) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Objects.requireNonNull(direction, "direction must not be null");
+        Sort.Direction dir = Sort.Direction.fromString(direction);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, sortBy));
         Page<ProductDTO> products = productService.getProductsByCategory(categoryId, pageable);
         return ResponseEntity.ok(products);
     }
