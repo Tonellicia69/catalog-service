@@ -88,6 +88,7 @@ public class ProductService {
     }
 
     @Transactional
+    @SuppressWarnings("null")
     public ProductDTO createProduct(ProductDTO productDTO) {
         log.info("Creating new product with SKU: {}", productDTO.getSku());
 
@@ -135,8 +136,8 @@ public class ProductService {
             product.setImages(images);
         }
 
-        Product savedProduct = productRepository.save(product);
-        Objects.requireNonNull(savedProduct, "saved product must not be null");
+        Product savedProduct = Objects.requireNonNull(productRepository.save(product),
+                "saved product must not be null");
         log.info("Product created successfully with id: {}", savedProduct.getId());
 
         return enrichWithInventory(savedProduct);
