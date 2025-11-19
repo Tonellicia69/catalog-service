@@ -1,5 +1,15 @@
 package com.ecommerce.catalog.service;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ecommerce.catalog.client.InventoryServiceClient;
 import com.ecommerce.catalog.dto.InventoryResponseDTO;
 import com.ecommerce.catalog.dto.ProductDTO;
@@ -11,16 +21,9 @@ import com.ecommerce.catalog.model.ProductAttribute;
 import com.ecommerce.catalog.model.ProductImage;
 import com.ecommerce.catalog.repository.CategoryRepository;
 import com.ecommerce.catalog.repository.ProductRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,8 +45,10 @@ public class ProductService {
     @Transactional(readOnly = true)
     public ProductDTO getProductById(Long id) {
         log.info("Fetching product with id: {}", id);
+        Objects.requireNonNull(id, "id must not be null");
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        Objects.requireNonNull(product, "product must not be null");
         return enrichWithInventory(product);
     }
 
@@ -65,7 +70,7 @@ public class ProductService {
             Boolean isVisible,
             Pageable pageable) {
         log.info("Searching products with filters: name={}, categoryId={}, minPrice={}, maxPrice={}",
-                 name, categoryId, minPrice, maxPrice);
+                name, categoryId, minPrice, maxPrice);
 
         Page<Product> products = productRepository.searchProducts(
                 name, categoryId, minPrice, maxPrice, isActive, isVisible, pageable);
@@ -76,6 +81,7 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<ProductDTO> getProductsByCategory(Long categoryId, Pageable pageable) {
         log.info("Fetching products for category id: {}", categoryId);
+        Objects.requireNonNull(categoryId, "categoryId must not be null");
         Page<Product> products = productRepository.findByCategoryIdAndIsActiveTrueAndIsVisibleTrue(
                 categoryId, pageable);
         return products.map(this::enrichWithInventory);
@@ -94,9 +100,11 @@ public class ProductService {
 
         // Set category if provided
         if (productDTO.getCategoryId() != null) {
-            Category category = categoryRepository.findById(productDTO.getCategoryId())
+            Long catId = productDTO.getCategoryId();
+            Objects.requireNonNull(catId, "categoryId must not be null");
+            Category category = categoryRepository.findById(catId)
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Category not found with id: " + productDTO.getCategoryId()));
+                            "Category not found with id: " + catId));
             product.setCategory(category);
         }
 
@@ -128,6 +136,7 @@ public class ProductService {
         }
 
         Product savedProduct = productRepository.save(product);
+        Objects.requireNonNull(savedProduct, "saved product must not be null");
         log.info("Product created successfully with id: {}", savedProduct.getId());
 
         return enrichWithInventory(savedProduct);
@@ -137,12 +146,14 @@ public class ProductService {
     public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
         log.info("Updating product with id: {}", id);
 
+        Objects.requireNonNull(id, "id must not be null");
+
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
 
         // Check SKU uniqueness if changed
         if (!product.getSku().equals(productDTO.getSku()) &&
-            productRepository.findBySku(productDTO.getSku()).isPresent()) {
+                productRepository.findBySku(productDTO.getSku()).isPresent()) {
             throw new IllegalArgumentException("Product with SKU " + productDTO.getSku() + " already exists");
         }
 
@@ -150,9 +161,11 @@ public class ProductService {
 
         // Update category if provided
         if (productDTO.getCategoryId() != null) {
-            Category category = categoryRepository.findById(productDTO.getCategoryId())
+            Long catId = productDTO.getCategoryId();
+            Objects.requireNonNull(catId, "categoryId must not be null");
+            Category category = categoryRepository.findById(catId)
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Category not found with id: " + productDTO.getCategoryId()));
+                            "Category not found with id: " + catId));
             product.setCategory(category);
         } else if (productDTO.getCategoryId() == null && product.getCategory() != null) {
             product.setCategory(null);
@@ -188,6 +201,7 @@ public class ProductService {
         }
 
         Product updatedProduct = productRepository.save(product);
+        Objects.requireNonNull(updatedProduct, "updated product must not be null");
         log.info("Product updated successfully with id: {}", updatedProduct.getId());
 
         return enrichWithInventory(updatedProduct);
@@ -196,8 +210,10 @@ public class ProductService {
     @Transactional
     public void deleteProduct(Long id) {
         log.info("Deleting product with id: {}", id);
+        Objects.requireNonNull(id, "id must not be null");
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        Objects.requireNonNull(product, "product must not be null");
         productRepository.delete(product);
         log.info("Product deleted successfully with id: {}", id);
     }
@@ -205,8 +221,10 @@ public class ProductService {
     @Transactional
     public void deactivateProduct(Long id) {
         log.info("Deactivating product with id: {}", id);
+        Objects.requireNonNull(id, "id must not be null");
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        Objects.requireNonNull(product, "product must not be null");
         product.setIsActive(false);
         productRepository.save(product);
         log.info("Product deactivated successfully with id: {}", id);
@@ -235,4 +253,3 @@ public class ProductService {
         return productDTO;
     }
 }
-
