@@ -1,17 +1,20 @@
 package com.ecommerce.catalog.service;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ecommerce.catalog.dto.CategoryDTO;
 import com.ecommerce.catalog.exception.ResourceNotFoundException;
 import com.ecommerce.catalog.mapper.CategoryMapper;
 import com.ecommerce.catalog.model.Category;
 import com.ecommerce.catalog.repository.CategoryRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +41,7 @@ public class CategoryService {
     @Transactional(readOnly = true)
     public CategoryDTO getCategoryById(Long id) {
         log.info("Fetching category with id: {}", id);
+        Objects.requireNonNull(id, "id must not be null");
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
         return buildCategoryTree(category);
@@ -69,9 +73,11 @@ public class CategoryService {
 
         // Set parent category if provided
         if (categoryDTO.getParentCategoryId() != null) {
-            Category parentCategory = categoryRepository.findById(categoryDTO.getParentCategoryId())
+            Long parentId = categoryDTO.getParentCategoryId();
+            Objects.requireNonNull(parentId, "parentCategoryId must not be null");
+            Category parentCategory = categoryRepository.findById(parentId)
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Parent category not found with id: " + categoryDTO.getParentCategoryId()));
+                            "Parent category not found with id: " + parentId));
             category.setParentCategory(parentCategory);
         }
 
@@ -85,12 +91,13 @@ public class CategoryService {
     public CategoryDTO updateCategory(Long id, CategoryDTO categoryDTO) {
         log.info("Updating category with id: {}", id);
 
+        Objects.requireNonNull(id, "id must not be null");
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
 
         // Check name uniqueness if changed
         if (!category.getName().equals(categoryDTO.getName()) &&
-            categoryRepository.findByName(categoryDTO.getName()).isPresent()) {
+                categoryRepository.findByName(categoryDTO.getName()).isPresent()) {
             throw new IllegalArgumentException("Category with name " + categoryDTO.getName() + " already exists");
         }
 
@@ -103,9 +110,11 @@ public class CategoryService {
 
         // Update parent category if provided
         if (categoryDTO.getParentCategoryId() != null) {
-            Category parentCategory = categoryRepository.findById(categoryDTO.getParentCategoryId())
+            Long parentId = categoryDTO.getParentCategoryId();
+            Objects.requireNonNull(parentId, "parentCategoryId must not be null");
+            Category parentCategory = categoryRepository.findById(parentId)
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Parent category not found with id: " + categoryDTO.getParentCategoryId()));
+                            "Parent category not found with id: " + parentId));
             category.setParentCategory(parentCategory);
         } else if (categoryDTO.getParentCategoryId() == null && category.getParentCategory() != null) {
             category.setParentCategory(null);
@@ -120,12 +129,14 @@ public class CategoryService {
     @Transactional
     public void deleteCategory(Long id) {
         log.info("Deleting category with id: {}", id);
+        Objects.requireNonNull(id, "id must not be null");
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
 
         // Check if category has products
         if (!category.getSubCategories().isEmpty()) {
-            throw new IllegalStateException("Cannot delete category with subcategories. Please delete or move subcategories first.");
+            throw new IllegalStateException(
+                    "Cannot delete category with subcategories. Please delete or move subcategories first.");
         }
 
         categoryRepository.delete(category);
@@ -135,6 +146,7 @@ public class CategoryService {
     @Transactional
     public void deactivateCategory(Long id) {
         log.info("Deactivating category with id: {}", id);
+        Objects.requireNonNull(id, "id must not be null");
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
         category.setIsActive(false);
@@ -168,4 +180,3 @@ public class CategoryService {
                 .replaceAll("^-|-$", "");
     }
 }
-
