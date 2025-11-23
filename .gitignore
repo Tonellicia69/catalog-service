@@ -35,3 +35,7 @@ build/
 .DS_Store
 Thumbs.db
 
+### Log files ###
+*-updates.log
+versions-use-latest.log
+
