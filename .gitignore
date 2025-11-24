@@ -39,3 +39,8 @@ Thumbs.db
 *-updates.log
 versions-use-latest.log
 
+### Environment variables ###
+.env
+.env.local
+.env.*.local
+
