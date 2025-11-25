@@ -1,24 +1,22 @@
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM gradle:8.5-jdk22-alpine AS build
 
 WORKDIR /app
 
-# Install Maven
-RUN apk add --no-cache maven
-
-# Copy pom.xml first for dependency caching
-COPY pom.xml .
+# Copy Gradle files first for dependency caching
+COPY build.gradle.kts settings.gradle.kts ./
+COPY gradle ./gradle
 
 # Download dependencies
-RUN mvn dependency:go-offline -B
+RUN gradle dependencies --no-daemon || true
 
 # Copy source code
 COPY src ./src
 
 # Build the application
-RUN mvn clean package -DskipTests
+RUN gradle build --no-daemon -x test
 
 # Runtime stage
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:22-jre-alpine
 
 WORKDIR /app
 
@@ -26,7 +24,7 @@ WORKDIR /app
 RUN apk add --no-cache wget
 
 # Copy the built JAR from build stage
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/build/libs/*.jar app.jar
 
 # Expose port
 EXPOSE 8082

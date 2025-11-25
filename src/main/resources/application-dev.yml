@@ -10,6 +10,6 @@ spring:
 
 logging:
   level:
-    com.ecommerce.catalog: DEBUG
+    com.soulf.catalog: DEBUG
     org.springframework.web: DEBUG
 

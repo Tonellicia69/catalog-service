@@ -34,23 +34,29 @@ jobs:
         java-version: '22'
         distribution: 'temurin'
 
-    - name: Cache Maven dependencies
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+
+    - name: Cache Gradle dependencies
       uses: actions/cache@v4
       with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
 
-    - name: Build with Maven
-      run: mvn clean compile -DskipTests
+    - name: Build with Gradle
+      run: ./gradlew build -x test
 
     - name: Run tests
-      run: mvn test
+      run: ./gradlew test
       env:
         SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/ecommerce_catalog
         SPRING_DATASOURCE_USERNAME: postgres
         SPRING_DATASOURCE_PASSWORD: postgres
 
     - name: Package
-      run: mvn package -DskipTests
+      run: ./gradlew bootJar
 
